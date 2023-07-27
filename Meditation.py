@@ -1,21 +1,38 @@
 import pandas as pd
-from sklearn.feature_selection import RFE
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression
 
-# Load the CSV data into a pandas DataFrame
-data = pd.read_csv('data/meditations.csv')
 
-# Split the data into features (X) and target (y)
-X = data.iloc[:, 1:]
-y = data.iloc[:, 0]
+"""
+Used GitHub Copilot and Claude 2
+"""
 
-# Create a Logistic Regression model
-model = LogisticRegression()
+# Read in data from csv file
+# Set index to column 0
+df = pd.read_csv('data/meditations.csv', index_col=0)
 
-# Create an RFE object and fit it to the data
-rfe = RFE(model, n_features_to_select=1)
-rfe.fit(X, y)
+# Drop unnecessary columns
+df.drop(['inability_to_cope_with_responsibilities (0-4)', 'feeling_score_fitbit_am', 'feeling_score_fitbit_noon', 'feeling_score_fitbit_pm',
+         'satisfaction_with_life_as_whole (0-4)', 'fully_mentally_alert (0-4)', 'outward_happiness', 'self_transcendence_glimpsed (0 or 1)',
+         'self_insight_obtained (0 or 1)', 'meditation_type (cat)'], axis=1, inplace=True)
+# temp drop
+df.drop(['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'alcohol_today (0 or 1)', 'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)',
+         'sleep_length_hrs'], axis=1, inplace=True)
 
-# Print the feature rankings
-for i, rank in enumerate(rfe.ranking_):
-    print(f'Feature {i+1}: Rank {rank}')
+# Convert data to numeric float values
+df = df.astype('float')
+
+# Split data into X (features) and y (target)
+X = df.drop('target_feelings', axis=1)
+y = df['target_feelings']
+
+# Create linear regression model
+lr = LinearRegression()
+
+# Fit model to data
+lr.fit(X, y)
+
+# Print model coefficients
+print("Coefficients:", lr.coef_)
+
+# Print R-squared score
+print("R-squared score:", lr.score(X, y))
