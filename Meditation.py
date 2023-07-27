@@ -5,6 +5,16 @@ import matplotlib.pyplot as plt
 
 """
 Used GitHub Copilot and Claude 2
+
+Most important numerical features for me:
+1. total_meditation_mins
+2. consecutive_meditation_days
+3. active_zone_mins_today
+
+Most important categorical features for me:
+1. diet_yesterday_1
+2. diet_today_2
+3. caffeine_0
 """
 
 # Read in data from csv file
