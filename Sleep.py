@@ -7,40 +7,41 @@ import matplotlib.pyplot as plt
 Used GitHub Copilot and Claude 2
 
 Most important numerical features for me:
-1. total_meditation_mins
-2. consecutive_meditation_days
-3. active_zone_mins_today
+1. consecutive days met
+2. adj time awake
+3. sleep score / zone minutes yesterday
+
+time asleep ?? (#2 when categorical features incl)
 
 Most important categorical features for me:
-1. diet_yesterday_1
-2. diet_today_2
-3. caffeine_0
+1. NOT diet yesterday (cat 0 or 1 or 2)_0
+2. goal met (cat 0 or 1)_0
+3. diet yesterday (cat 0 or 1 or 2)_1
 """
 
 # Read in data from csv file
 # Set index to column 0
-df = pd.read_csv('data/meditations.csv', index_col=0)
+df = pd.read_csv('data/sleep.csv', index_col=0)
 
 # Drop unnecessary columns
-df.drop(['inability_to_cope_with_responsibilities (0-4)', 'feeling_score_fitbit_am', 'feeling_score_fitbit_noon',
-         'feeling_score_fitbit_pm', 'satisfaction_with_life_as_whole (0-4)', 'fully_mentally_alert (0-4)',
-         'outward_happiness', 'self_transcendence_glimpsed (0 or 1)', 'self_insight_obtained (0 or 1)',
-         'meditation_type (cat)'], axis=1, inplace=True)
+df.drop(['how awesome (0-4)', 'how unneeded caffeine (0-4)',
+        'other notes', 'goal'], axis=1, inplace=True)
 
 # Drop categorical columns
-df.drop(['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'alcohol_today (0 or 1)',
-         'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)',], axis=1, inplace=True)
+# df.drop(['diet yesterday (cat 0 or 1 or 2)', 'meditated yesterday (cat 0 or 1)', 'alcohol yesterday (cat 0 or 1)',
+#          'goal met (cat 0 or 1)', 'estimated oxygen variation high (cat 0 or 1)'], axis=1, inplace=True)
 
 # Encode categorical columns
-# df = pd.get_dummies(df, columns=['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)',
-#                                  'alcohol_today (0 or 1)', 'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)'])
+df = pd.get_dummies(df, columns=['diet yesterday (cat 0 or 1 or 2)', 'meditated yesterday (cat 0 or 1)',
+                                 'alcohol yesterday (cat 0 or 1)', 'goal met (cat 0 or 1)',
+                                 'estimated oxygen variation high (cat 0 or 1)'])
 
 # Convert data to numeric float values
 df = df.astype('float')
 
 # Split data into X (features) and y (target)
-X = df.drop('target_feelings', axis=1)
-y = df['target_feelings']
+X = df.drop('target', axis=1)
+y = df['target']
 
 # Create linear regression model
 lr = LinearRegression()
