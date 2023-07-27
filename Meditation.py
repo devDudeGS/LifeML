@@ -15,9 +15,14 @@ df = pd.read_csv('data/meditations.csv', index_col=0)
 df.drop(['inability_to_cope_with_responsibilities (0-4)', 'feeling_score_fitbit_am', 'feeling_score_fitbit_noon', 'feeling_score_fitbit_pm',
          'satisfaction_with_life_as_whole (0-4)', 'fully_mentally_alert (0-4)', 'outward_happiness', 'self_transcendence_glimpsed (0 or 1)',
          'self_insight_obtained (0 or 1)', 'meditation_type (cat)'], axis=1, inplace=True)
-# temp drop
-df.drop(['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'alcohol_today (0 or 1)', 'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)',
-         ], axis=1, inplace=True)
+
+# Drop categorical columns
+df.drop(['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'alcohol_today (0 or 1)',
+         'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)',], axis=1, inplace=True)
+
+# Encode categorical columns
+# df = pd.get_dummies(df, columns=['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)',
+#                                  'alcohol_today (0 or 1)', 'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)'])
 
 # Convert data to numeric float values
 df = df.astype('float')
