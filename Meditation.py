@@ -59,21 +59,34 @@ feature_names = X.columns
 # Get the coefficients from the model
 coefficients = lr.coef_
 
-# Plot bar chart
-plt.bar(feature_names, coefficients)
+# Round the coefficients to 5 decimal places
+coefficients = [round(coefficient, 5) for coefficient in coefficients]
 
-# Set the x-tick labels to be diagonal
-plt.xticks(rotation=75)
+# Combine to dataframe
+coef_df = pd.DataFrame(
+    data=coefficients, index=feature_names, columns=['Coefficient'])
 
-plt.title("Linear Regression Coefficients")
-plt.xlabel("Feature")
-plt.ylabel("Coefficient")
+# Sort by coefficient value
+coef_df = coef_df.sort_values(by='Coefficient', ascending=False)
 
-# Annotate bars with the value
-for i, v in enumerate(coefficients):
-    plt.text(i, v, str(round(v, 3)))
+# Print results
+print(coef_df)
 
-# Prevent cut off labels
-plt.tight_layout()
+# # Plot bar chart
+# plt.bar(feature_names, coefficients)
 
-plt.show()
+# # Set the x-tick labels to be diagonal
+# plt.xticks(rotation=75)
+
+# plt.title("Linear Regression Coefficients")
+# plt.xlabel("Feature")
+# plt.ylabel("Coefficient")
+
+# # Annotate bars with the value
+# for i, v in enumerate(coefficients):
+#     plt.text(i, v, str(round(v, 3)))
+
+# # Prevent cut off labels
+# plt.tight_layout()
+
+# plt.show()
