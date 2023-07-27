@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
 
 
 """
@@ -16,7 +17,7 @@ df.drop(['inability_to_cope_with_responsibilities (0-4)', 'feeling_score_fitbit_
          'self_insight_obtained (0 or 1)', 'meditation_type (cat)'], axis=1, inplace=True)
 # temp drop
 df.drop(['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'alcohol_today (0 or 1)', 'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)',
-         'sleep_length_hrs'], axis=1, inplace=True)
+         ], axis=1, inplace=True)
 
 # Convert data to numeric float values
 df = df.astype('float')
@@ -36,3 +37,28 @@ print("Coefficients:", lr.coef_)
 
 # Print R-squared score
 print("R-squared score:", lr.score(X, y))
+
+# Extract the feature names
+feature_names = X.columns
+
+# Get the coefficients from the model
+coefficients = lr.coef_
+
+# Plot bar chart
+plt.bar(feature_names, coefficients)
+
+# Set the x-tick labels to be diagonal
+plt.xticks(rotation=75)
+
+plt.title("Linear Regression Coefficients")
+plt.xlabel("Feature")
+plt.ylabel("Coefficient")
+
+# Annotate bars with the value
+for i, v in enumerate(coefficients):
+    plt.text(i, v, str(round(v, 3)))
+
+# Prevent cut off labels
+plt.tight_layout()
+
+plt.show()
