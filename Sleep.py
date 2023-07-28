@@ -30,7 +30,7 @@ df = pd.read_csv('data/sleep.csv', index_col=0)
 
 # Drop unnecessary columns
 df.drop(['how awesome (0-4)', 'how unneeded caffeine (0-4)',
-        'other notes', 'goal', 'time awake'], axis=1, inplace=True)
+        'other notes', 'goal', 'time awake', 'stages %'], axis=1, inplace=True)
 
 # Drop categorical columns
 # df.drop(['diet yesterday (cat 0 or 1 or 2)', 'meditated yesterday (cat 0 or 1)', 'alcohol yesterday (cat 0 or 1)',
