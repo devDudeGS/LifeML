@@ -3,6 +3,7 @@ from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
+from lasso_regression import LassoRegression
 
 
 """
@@ -49,6 +50,18 @@ df = df.astype('float')
 X = df.drop('target_feelings', axis=1)
 y = df['target_feelings']
 
+# Create a LassoRegression object with alpha=1.0
+lasso = LassoRegression(alpha=1.0)
+
+# Fit the model to your data
+lasso.fit(X, y)
+
+# Print the R-squared score
+print("R-squared score:", lasso.score)
+
+# Print the coefficients alongside the corresponding feature name, in order of coefficient size largest to smallest
+coefficients, feature_names = lasso.get_coefficients_and_features(X)
+
 # Linear Regression
 # # Create linear regression model
 # lr = LinearRegression()
@@ -62,22 +75,9 @@ y = df['target_feelings']
 # # Print R-squared score
 # print("R-squared score:", lr.score(X, y))
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42)
-
-# needed?
-# X_train, X_val, y_train, y_val = train_test_split(
-#     X_train, y_train, test_size=0.25, random_state=42)
 
 # alphas = [1, 0.8, 0.5, 0.3, 0.1, 0.08, 0.05, 0.03, 0.01]
 
-# Lasso Regression
-# Create a Lasso regression object
-lasso = Lasso(alpha=1.0)
-
-# Fit the model to your data
-lasso.fit(X_train, y_train)
 
 # for a in alphas:
 #     print('Lasso Regression')
@@ -88,20 +88,6 @@ lasso.fit(X_train, y_train)
 #     rmse = mean_squared_error(y_val, y_pred, squared=False)
 #     print('RMSE:', rmse)
 
-# Evaluate the model on your test data
-score = lasso.score(X_test, y_test)
-print('Lasso regression score:', score)
-
-# Extract the feature names
-# feature_names = X.columns
-feature_names = X_train.columns
-
-# Get the coefficients from the model
-# coefficients = lr.coef_
-coefficients = lasso.coef_
-
-# Round the coefficients to 6 decimal places
-coefficients = [round(coefficient, 6) for coefficient in coefficients]
 
 # Combine to dataframe
 coef_df = pd.DataFrame(
