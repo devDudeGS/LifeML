@@ -9,6 +9,9 @@ Most important features for me:
 2. active_zone_mins_today
 3. first_meditation_time
 
+Alpha: 1.0
+RMSE: 0.259
+
 Used GitHub Copilot and Claude 2.0 to help write this code.
 """
 

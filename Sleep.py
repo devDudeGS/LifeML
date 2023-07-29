@@ -10,6 +10,9 @@ Most important features for me:
 3. adj time awake
 4. bedtime diff (22:30)
 
+Alpha: 1.0
+RMSE: 0.511
+
 Used GitHub Copilot and Claude 2.0 to help write this code.
 """
 
