@@ -14,6 +14,10 @@ Used GitHub Copilot and Claude 2.0 to help write this code.
 
 
 def analyze_meditation_data():
+    print()
+    print("Meditation Data Analysis")
+    print()
+
     data = CsvDataset('data/meditations.csv')
     columns_to_drop = get_columns_to_drop()
     data.drop_columns(columns_to_drop)
