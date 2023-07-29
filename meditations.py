@@ -1,28 +1,14 @@
 import pandas as pd
-from sklearn.linear_model import LinearRegression, Lasso
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-import matplotlib.pyplot as plt
 from lasso_regression import LassoRegression
-
+import matplotlib.pyplot as plt
 
 """
 Used GitHub Copilot and Claude 2
 
-LR important numerical features for me:
-1. total_meditation_mins
-2. consecutive_meditation_days
-3. active_zone_mins_today
-
-LR important categorical features for me:
-1. diet_yesterday_1
-2. diet_today_2
-3. caffeine_0
-
-Lasso important features for me:
-1. active_zone_mins_today
-2. first_meditation_time
-3. sleep_length_hrs
+Most important features for me:
+1. consecutive_meditation_days
+2. active_zone_mins_today
+3. first_meditation_time
 """
 
 # Read in data from csv file
@@ -35,10 +21,6 @@ df.drop(['inability_to_cope_with_responsibilities (0-4)', 'feeling_score_fitbit_
          'outward_happiness', 'self_transcendence_glimpsed (0 or 1)', 'self_insight_obtained (0 or 1)',
          'meditation_type (cat)'], axis=1, inplace=True)
 
-# Drop categorical columns
-# df.drop(['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'alcohol_today (0 or 1)',
-#          'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)',], axis=1, inplace=True)
-
 # Encode categorical columns
 df = pd.get_dummies(df, columns=['diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)',
                                  'alcohol_today (0 or 1)', 'alcohol_yesterday (0 or 1)', 'caffeine (0 or 1)'])
@@ -46,48 +28,20 @@ df = pd.get_dummies(df, columns=['diet_today (0 or 1 or 2)', 'diet_yesterday (0 
 # Convert data to numeric float values
 df = df.astype('float')
 
-# # Split data into X (features) and y (target)
+# Split data into X (features) and y (target)
 X = df.drop('target_feelings', axis=1)
 y = df['target_feelings']
 
-# Create a LassoRegression object with alpha=1.0
+# Create and fit a Lasso regression model
 lasso = LassoRegression(alpha=1.0)
+lasso.split_data(X, y)
+best_a = lasso.get_best_alpha(
+    lasso.X_train, lasso.y_train, lasso.X_val, lasso.y_val)
+lasso.set_alpha(best_a)
+lasso.fit(lasso.X_train, lasso.y_train)
+lasso.score(lasso.X_test, lasso.y_test)
 
-# Fit the model to your data
-lasso.fit(X, y)
-
-# Print the R-squared score
-print("R-squared score:", lasso.score)
-
-# Print the coefficients alongside the corresponding feature name, in order of coefficient size largest to smallest
 coefficients, feature_names = lasso.get_coefficients_and_features(X)
-
-# Linear Regression
-# # Create linear regression model
-# lr = LinearRegression()
-
-# # Fit model to data
-# lr.fit(X, y)
-
-# # Print model coefficients
-# print("Coefficients:", lr.coef_)
-
-# # Print R-squared score
-# print("R-squared score:", lr.score(X, y))
-
-
-# alphas = [1, 0.8, 0.5, 0.3, 0.1, 0.08, 0.05, 0.03, 0.01]
-
-
-# for a in alphas:
-#     print('Lasso Regression')
-#     print('alpha:', a)
-#     model = Lasso(alpha=a)
-#     model.fit(X_train, y_train)
-#     y_pred = model.predict(X_val)
-#     rmse = mean_squared_error(y_val, y_pred, squared=False)
-#     print('RMSE:', rmse)
-
 
 # Combine to dataframe
 coef_df = pd.DataFrame(
@@ -105,22 +59,3 @@ print("Low positive coefficient = weak positive relationship")
 print("High negative coefficient = strong negative relationship")
 print("Low negative coefficient = weak negative relationship")
 print("Coefficient near 0 = little linear relationship")
-
-# # Plot bar chart
-# plt.bar(feature_names, coefficients)
-
-# # Set the x-tick labels to be diagonal
-# plt.xticks(rotation=75)
-
-# plt.title("Linear Regression Coefficients")
-# plt.xlabel("Feature")
-# plt.ylabel("Coefficient")
-
-# # Annotate bars with the value
-# for i, v in enumerate(coefficients):
-#     plt.text(i, v, str(round(v, 3)))
-
-# # Prevent cut off labels
-# plt.tight_layout()
-
-# plt.show()
