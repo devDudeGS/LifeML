@@ -11,6 +11,7 @@ Most important features for me:
 
 Alpha: 1.0
 RMSE: 0.259
+R-squared score: -0.029
 
 Used GitHub Copilot and Claude 2.0 to help write this code.
 """
@@ -27,8 +28,8 @@ def analyze_meditation_data():
     categorical_columns = get_categorical_columns()
     data.encode_categorical_columns(categorical_columns)
     data.split_features_and_target('target_feelings')
-    coefficients, feature_names = data.run_model(data.X, data.y)
-    data.print_results(coefficients, feature_names)
+    coefficients, feature_names = run_model(data.X, data.y)
+    print_results(coefficients, feature_names)
 
 
 def get_columns_to_drop():
