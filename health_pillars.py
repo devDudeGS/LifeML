@@ -1,4 +1,4 @@
-from csv_dataset import CsvDataset
+from csv_dataset import CsvDataset, run_model, print_results
 
 """
 Analyzes health data from 2020-09-08 to 2020-10-27,
@@ -29,11 +29,12 @@ def analyze_health_data():
     data = CsvDataset('data/health_pillars.csv')
     columns_to_drop = get_columns_to_drop()
     data.drop_columns(columns_to_drop)
+    data.drop_index_after_date('2023-08-13')
     categorical_columns = get_categorical_columns()
     data.encode_categorical_columns(categorical_columns)
     data.split_features_and_target('target_feelings')
-    coefficients, feature_names = data.run_model(data.X, data.y)
-    data.print_results(coefficients, feature_names)
+    coefficients, feature_names = run_model(data.X, data.y)
+    print_results(coefficients, feature_names)
 
 
 def get_columns_to_drop():
@@ -43,7 +44,7 @@ def get_columns_to_drop():
     """
     return ['meditation_type (cat)', 'non_duality_glimpsed (0 or 1)', 'self_insight_obtained (0 or 1)',
             'feeling_score_fitbit_am', 'feeling_score_fitbit_pm', 'satisfaction_with_life_as_whole (0-4)',
-            'inability_to_cope_with_responsibilities (0-4)']
+            'inability_to_cope_with_responsibilities (0-4)', 'sleep_awake_mins']
 
 
 def get_categorical_columns():
@@ -51,6 +52,27 @@ def get_categorical_columns():
     Return categorical columns to encode.
     """
     return ['caffeine (0 or 1)', 'diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'exercise_type (cat)']
+
+
+def get_sleep_length_columns():
+    """
+    Return columns related to sleep length.
+    Target could be target_feelings or feeling_score_fitbit_am.
+    """
+    return ['sleep_length', 'target_feelings']
+
+
+def get_sleep_length_discretized():
+    """
+    sleep_length_10  8.25   0.466667
+    sleep_length_11  8.50   0.150000
+    sleep_length_12  8.75   0.040000
+    sleep_length_8   7.75  -0.090000
+    sleep_length_3   6.50  -0.125000
+    """
+    feature = 'sleep_length'
+    bins = [5.75, 6, 6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75, 8, 8.25, 8.5, 8.75, 9]
+    return feature, bins
 
 
 if __name__ == "__main__":

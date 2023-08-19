@@ -18,6 +18,18 @@ class CsvDataset:
         """
         self.df.drop(columns, axis=1, inplace=True)
 
+    def drop_index_before_date(self, date):
+        """
+        Drop rows with index before a given date.
+        """
+        self.df = self.df[self.df.index >= date]
+
+    def drop_index_after_date(self, date):
+        """
+        Drop rows with index after a given date.
+        """
+        self.df = self.df[self.df.index <= date]
+
     def encode_categorical_columns(self, columns):
         """
         Encode categorical columns in the dataframe.
