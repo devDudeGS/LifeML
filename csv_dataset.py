@@ -1,5 +1,6 @@
 import pandas as pd
 from lasso_regression import LassoRegression
+import numpy as np
 
 
 class CsvDataset:
@@ -23,6 +24,15 @@ class CsvDataset:
         """
         self.df = pd.get_dummies(self.df, columns=columns)
 
+    def discretize_feature(self, feature, bins):
+        """
+        Split continuous feature into discrete bins
+        """
+        self.df[feature] = pd.to_numeric(self.df[feature], errors='coerce')
+        digitized = np.digitize(self.df[feature], bins=bins)
+        self.df[feature] = digitized
+        self.encode_categorical_columns([feature])
+
     def split_features_and_target(self, target_column):
         """
         Set remaining values as floats, and split into features and target.
@@ -30,6 +40,14 @@ class CsvDataset:
         self.df = self.df.astype('float')
         self.X = self.df.drop(target_column, axis=1)
         self.y = self.df[target_column]
+
+
+def get_excess_cols(df, keep_cols):
+    """
+    Get columns to drop based on columns to keep
+    """
+    all_cols = df.columns.tolist()
+    return set(all_cols) - set(keep_cols)
 
 
 def run_model(X, y):
