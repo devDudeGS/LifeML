@@ -82,6 +82,7 @@ def print_results(coefficients, feature_names):
     """
     coef_df = pd.DataFrame(
         data=coefficients, index=feature_names, columns=['Coefficient'])
+    coef_df = coef_df[coef_df['Coefficient'] != 0]
     coef_df = coef_df.sort_values(by='Coefficient', ascending=False)
     print(coef_df)
     print()

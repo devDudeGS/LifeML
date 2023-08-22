@@ -68,7 +68,7 @@ class LassoRegression:
         Get the R-squared score for the Lasso regression model on the specified test data.
         """
         score = self.model.score(X_test, y_test)
-        print('R-squared score:', score)
+        print('R-squared score (higher is better):', score)
         print()
         return score
 

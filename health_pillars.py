@@ -1,15 +1,16 @@
 from csv_dataset import CsvDataset, run_model, print_results
 
 """
-Analyzes health data from 2020-09-08 to 2020-10-27,
-and 2021-09-27 to 2021-12-17,
-and 2023-08-01 to present,
+Analyzes health data from:
+2020-09-08 to 2020-10-27,
+2021-09-27 to 2021-12-17,
+2023-08-01 to present,
 to determine which features are correlated with happiness scores.
 
-Most important features for me:
-1. sleep_wakeup_diff (6:15-6:45)
+Baseline important features for me:
+1. sleep_wakeup_diff
 2. active_zone_mins_today
-3. sleep_bedtime_diff (22:30-23:00)
+3. sleep_bedtime_diff
 4. active_zone_mins_prev_week
 5. active_zone_mins_yesterday
 
@@ -20,20 +21,40 @@ R-squared score: -0.104
 Used GitHub Copilot and Claude 2.0 to help write the initial logic.
 """
 
+HEALTH_CSV = 'data/health_pillars.csv'
+TARGET_MAIN = 'target_feelings'
+SLEEP_DATASET_START = '2020-09-08'
+SLEEP_DATASET_END = '2020-10-27'
+MEDITATION_DATASET_START = '2021-09-27'
+MEDITATION_DATASET_END = '2021-12-17'
+HEALTH_DATASET_START = '2023-08-01'
+LATEST_DATA_END = '2023-08-13'
+
 
 def analyze_health_data():
     print()
     print("Health Pillars Data Analysis")
     print()
 
-    data = CsvDataset('data/health_pillars.csv')
-    columns_to_drop = get_columns_to_drop()
-    data.drop_columns(columns_to_drop)
-    data.drop_index_after_date('2023-08-13')
-    categorical_columns = get_categorical_columns()
-    data.encode_categorical_columns(categorical_columns)
-    data.split_features_and_target('target_feelings')
+    all_data = CsvDataset(HEALTH_CSV)
+    analyze_all_features(all_data, TARGET_MAIN, SLEEP_DATASET_START, MEDITATION_DATASET_END)
+
+
+def analyze_all_features(all_data, target, date_to_start, date_to_end):
+    data = all_data
+
+    # set dates
+    data.drop_index_before_date(date_to_start)
+    data.drop_index_after_date(date_to_end)
+
+    # set columns
+    data.drop_columns(get_columns_to_drop())
+    data.encode_categorical_columns(get_categorical_columns())
+
+    # run model
+    data.split_features_and_target(target)
     coefficients, feature_names = run_model(data.X, data.y)
+
     print_results(coefficients, feature_names)
 
 
