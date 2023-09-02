@@ -1,4 +1,4 @@
-from csv_dataset import CsvDataset, run_model, print_results
+from csv_dataset import CsvDataset, run_model, print_results, get_excess_cols, print_legend
 
 """
 Analyzes health data from:
@@ -23,12 +23,13 @@ Used GitHub Copilot and Claude 2.0 to help write the initial logic.
 
 HEALTH_CSV = 'data/health_pillars.csv'
 TARGET_MAIN = 'target_feelings'
+TARGET_WAKEUP = 'feeling_score_fitbit_am'
 SLEEP_DATASET_START = '2020-09-08'
 SLEEP_DATASET_END = '2020-10-27'
 MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
-LATEST_DATA_END = '2023-08-13'
+LATEST_DATA_END = '2023-08-26'
 
 
 def analyze_health_data():
@@ -36,12 +37,16 @@ def analyze_health_data():
     print("Health Pillars Data Analysis")
     print()
 
-    all_data = CsvDataset(HEALTH_CSV)
-    analyze_all_features(all_data, TARGET_MAIN, SLEEP_DATASET_START, MEDITATION_DATASET_END)
+    analyze_all_features(TARGET_MAIN, SLEEP_DATASET_START, MEDITATION_DATASET_END)
+    analyze_sleep_length(TARGET_WAKEUP, SLEEP_DATASET_START, MEDITATION_DATASET_END)
+    print_legend()
 
 
-def analyze_all_features(all_data, target, date_to_start, date_to_end):
-    data = all_data
+def analyze_all_features(target, date_to_start, date_to_end):
+    print("--ALL FEATURES--")
+    print()
+
+    data = CsvDataset(HEALTH_CSV)
 
     # set dates
     data.drop_index_before_date(date_to_start)
@@ -50,6 +55,30 @@ def analyze_all_features(all_data, target, date_to_start, date_to_end):
     # set columns
     data.drop_columns(get_columns_to_drop())
     data.encode_categorical_columns(get_categorical_columns())
+
+    # run model
+    data.split_features_and_target(target)
+    coefficients, feature_names = run_model(data.X, data.y)
+
+    print_results(coefficients, feature_names)
+
+
+def analyze_sleep_length(target, date_to_start, date_to_end):
+    print("--SLEEP LENGTH--")
+    print()
+
+    data = CsvDataset(HEALTH_CSV)
+
+    # set dates
+    data.drop_index_before_date(date_to_start)
+    data.drop_index_after_date(date_to_end)
+
+    # set columns
+    columns_to_keep = get_sleep_length_columns(target)
+    columns_to_drop = get_excess_cols(data.df, columns_to_keep)
+    data.drop_columns(columns_to_drop)
+    feature, bins = get_sleep_length_discretized()
+    data.discretize_feature(feature, bins)
 
     # run model
     data.split_features_and_target(target)
@@ -75,12 +104,12 @@ def get_categorical_columns():
     return ['caffeine (0 or 1)', 'diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'exercise_type (cat)']
 
 
-def get_sleep_length_columns():
+def get_sleep_length_columns(target):
     """
     Return columns related to sleep length.
     Target could be target_feelings or feeling_score_fitbit_am.
     """
-    return ['sleep_length', 'target_feelings']
+    return ['sleep_length', target]
 
 
 def get_sleep_length_discretized():

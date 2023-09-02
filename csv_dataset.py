@@ -86,6 +86,12 @@ def print_results(coefficients, feature_names):
     coef_df = coef_df.sort_values(by='Coefficient', ascending=False)
     print(coef_df)
     print()
+
+
+def print_legend():
+    """
+    Print the legend to understand the results.
+    """
     print("Legend")
     print("High positive coefficient = strong positive relationship")
     print("Low positive coefficient = weak positive relationship")
