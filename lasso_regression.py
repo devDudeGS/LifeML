@@ -53,7 +53,6 @@ class LassoRegression:
 
         print('Best alpha:', best_alpha)
         print('Best RMSE (lower is better):', best_rmse)
-        print()
         return best_alpha
 
     def fit(self, X_train, y_train):

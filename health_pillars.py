@@ -37,8 +37,8 @@ def analyze_health_data():
     print("Health Pillars Data Analysis")
     print()
 
-    analyze_all_features(TARGET_MAIN, SLEEP_DATASET_START, MEDITATION_DATASET_END)
-    analyze_sleep_length(TARGET_WAKEUP, SLEEP_DATASET_START, MEDITATION_DATASET_END)
+    analyze_all_features(TARGET_MAIN, SLEEP_DATASET_START, LATEST_DATA_END)
+    analyze_sleep_length(TARGET_WAKEUP, SLEEP_DATASET_START, LATEST_DATA_END)
     print_legend()
 
 
@@ -68,6 +68,9 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     print()
 
     data = CsvDataset(HEALTH_CSV)
+
+    # get avg awake mins
+    data.get_avg_in_column('sleep_awake_mins', 30)
 
     # set dates
     data.drop_index_before_date(date_to_start)

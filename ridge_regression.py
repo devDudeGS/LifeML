@@ -53,7 +53,6 @@ class RidgeRegression:
 
         print('Best alpha:', best_alpha)
         print('Best R-squared score (higher is better)', best_score)
-        print()
         return best_alpha
 
     def fit(self, X_train, y_train):

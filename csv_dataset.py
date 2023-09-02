@@ -53,6 +53,14 @@ class CsvDataset:
         self.X = self.df.drop(target_column, axis=1)
         self.y = self.df[target_column]
 
+    def get_avg_in_column(self, column, days):
+        """
+        Get average for a column over a certain number of days.
+        """
+        avg = round(self.df[column].tail(days).mean(), 1)
+        print(f"Avg for {column} in last {days} days: {avg}")
+        print()
+
 
 def get_excess_cols(df, keep_cols):
     """
