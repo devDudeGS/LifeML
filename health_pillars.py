@@ -19,6 +19,17 @@ RMSE: 0.231
 R-squared score: -0.104
 
 Used GitHub Copilot and Claude 2.0 to help write the initial logic.
+
+Latest important features:
+1. active_zone_mins_today
+2. meditation_consecutive
+3. sleep_wakeup_diff
+
+Latest sleep conclusions:
+1. sleep_length_10   8.25 = BEST
+2. sleep_length_3   6.50 = WORST
+
+Avg sleep awake mins: 46.5
 """
 
 HEALTH_CSV = 'data/health_pillars.csv'
@@ -29,7 +40,7 @@ SLEEP_DATASET_END = '2020-10-27'
 MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
-LATEST_DATA_END = '2023-08-26'
+LATEST_DATA_END = '2023-10-07'
 
 
 def analyze_health_data():
@@ -37,15 +48,18 @@ def analyze_health_data():
     print("Health Pillars Data Analysis")
     print()
 
+    print("--ALL FEATURES--")
+    print()
     analyze_all_features(TARGET_MAIN, SLEEP_DATASET_START, LATEST_DATA_END)
-    analyze_sleep_length(TARGET_WAKEUP, SLEEP_DATASET_START, LATEST_DATA_END)
+
+    print("--SLEEP LENGTH--")
+    print()
+    analyze_sleep_length(TARGET_WAKEUP, HEALTH_DATASET_START, LATEST_DATA_END)
+
     print_legend()
 
 
 def analyze_all_features(target, date_to_start, date_to_end):
-    print("--ALL FEATURES--")
-    print()
-
     data = CsvDataset(HEALTH_CSV)
 
     # set dates
@@ -64,17 +78,14 @@ def analyze_all_features(target, date_to_start, date_to_end):
 
 
 def analyze_sleep_length(target, date_to_start, date_to_end):
-    print("--SLEEP LENGTH--")
-    print()
-
     data = CsvDataset(HEALTH_CSV)
-
-    # get avg awake mins
-    data.get_avg_in_column('sleep_awake_mins', 30)
 
     # set dates
     data.drop_index_before_date(date_to_start)
     data.drop_index_after_date(date_to_end)
+
+    # get avg awake mins
+    data.get_avg_in_column('sleep_awake_mins', 30)
 
     # set columns
     columns_to_keep = get_sleep_length_columns(target)

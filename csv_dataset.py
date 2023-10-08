@@ -42,6 +42,7 @@ class CsvDataset:
         """
         self.df[feature] = pd.to_numeric(self.df[feature], errors='coerce')
         digitized = np.digitize(self.df[feature], bins=bins)
+        # TODO: replace np array values with actual values from bins rather than indexes
         self.df[feature] = digitized
         self.encode_categorical_columns([feature])
 
@@ -57,8 +58,11 @@ class CsvDataset:
         """
         Get average for a column over a certain number of days.
         """
-        avg = round(self.df[column].tail(days).mean(), 1)
-        print(f"Avg for {column} in last {days} days: {avg}")
+        subset = self.df[column].tail(days)
+        mean = round(subset.mean(), 1)
+        median = round(subset.median(), 1)
+        print(f"Mean for {column} in last {days} days: {mean}")
+        print(f"Median for {column} in last {days} days: {median}")
         print()
 
 
