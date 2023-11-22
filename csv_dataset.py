@@ -18,6 +18,14 @@ class CsvDataset:
         """
         self.df.drop(columns, axis=1, inplace=True)
 
+    def insert_column_from_column_additions(self, columns, new_column_name):
+        """
+        Insert new column, by adding given columns.
+        """
+        self.df[new_column_name] = 0
+        for col in columns:
+            self.df[new_column_name] += self.df[col]
+
     def drop_index_before_date(self, date):
         """
         Drop rows with index before a given date.
@@ -29,6 +37,12 @@ class CsvDataset:
         Drop rows with index after a given date.
         """
         self.df = self.df[self.df.index <= date]
+
+    def drop_rows_without_column_values(self, columns):
+        """
+        Drop rows without values in given columns.
+        """
+        self.df = self.df.dropna(subset=columns)
 
     def encode_categorical_columns(self, columns):
         """
@@ -45,6 +59,16 @@ class CsvDataset:
         # TODO: replace np array values with actual values from bins rather than indexes
         self.df[feature] = digitized
         self.encode_categorical_columns([feature])
+
+    def breakout_categorical_codes(self, feature, category_prefix):
+        """
+        Given a feature that contains multiple categorical codes,
+        break out each code into its own column, then drop the original.
+        """
+        unique_categories = sorted(set(''.join(self.df[feature].unique())))
+        for category in unique_categories:
+            self.df[category_prefix + category] = self.df[feature].apply(lambda x: 1 if category in x else 0)
+        self.df.drop(feature, axis=1, inplace=True)
 
     def split_features_and_target(self, target_column):
         """
