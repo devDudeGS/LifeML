@@ -21,15 +21,15 @@ R-squared score: -0.104
 Used GitHub Copilot and Claude 2.0 to help write the initial logic.
 
 Latest important features:
-1. diet_yesterday (0 or 1 or 2)_1.0
-2. exercise_type (cat)_0.0 INVERSE
-3. diet_today (0 or 1 or 2)_0.0 INVERSE
+1. active_zone_mins_prev_week
+2. steps_today
+3. steps_yesterday INVERSE
 
 Latest sleep conclusions:
 1. sleep_length_8   7.75      = BEST
 2. sleep_length_0-3 5.75-6.50 = WORST
 
-Avg sleep awake mins: 52.7
+Avg sleep awake mins: 55.4
 """
 
 HEALTH_CSV = 'data/health_pillars.csv'
@@ -42,7 +42,7 @@ SLEEP_DATASET_END = '2020-10-27'
 MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
-LATEST_DATA_END = '2023-11-18'
+LATEST_DATA_END = '2023-11-30'
 
 
 def analyze_health_data():
@@ -52,7 +52,7 @@ def analyze_health_data():
 
     print("--ALL FEATURES--")
     print()
-    analyze_all_features(TARGET_MAIN, SLEEP_DATASET_START, LATEST_DATA_END)
+    analyze_all_features(TARGET_MAIN, HEALTH_DATASET_START, LATEST_DATA_END)
 
     print("--SLEEP LENGTH--")
     print()
@@ -60,7 +60,7 @@ def analyze_health_data():
 
     print("--MEDITATION--")
     print()
-    analyze_meditation(TARGET_NON_DUALITY, TARGET_SELF_INSIGHT)
+    analyze_meditation(TARGET_NON_DUALITY, TARGET_SELF_INSIGHT, LATEST_DATA_END)
 
     print_legend()
 
@@ -73,7 +73,7 @@ def analyze_all_features(target, date_to_start, date_to_end):
     data.drop_index_after_date(date_to_end)
 
     # set columns
-    data.drop_columns(get_columns_to_drop())
+    data.drop_columns(get_columns_to_drop_with_meditation())
     data.encode_categorical_columns(get_categorical_columns())
 
     # run model
@@ -107,19 +107,19 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     print_results(coefficients, feature_names)
 
 
-def analyze_meditation(target_1, target_2):
+def analyze_meditation(target_1, target_2, date_to_end):
     data = CsvDataset(HEALTH_CSV)
 
     # set rows
+    data.drop_index_after_date(date_to_end)
     targets = [target_1, target_2]
     data.drop_rows_without_column_values(targets)
 
     # set columns
     target = "target_meditation"
     data.insert_column_from_column_additions(targets, target)
-    columns_to_keep = get_meditation_columns(target)
-    columns_to_drop = get_excess_cols(data.df, columns_to_keep)
-    data.drop_columns(columns_to_drop)
+    data.drop_columns(get_columns_to_drop())
+    data.encode_categorical_columns(get_categorical_columns())
     feature, category_prefix = get_meditation_type_feature()
     data.breakout_categorical_codes(feature, category_prefix)
 
@@ -135,9 +135,18 @@ def get_columns_to_drop():
     Return columns to drop from the dataset.
     Includes columns used to derive target or other features.
     """
-    return ['meditation_type (cat)', 'non_duality_glimpsed (0 or 1)', 'self_insight_obtained (0 or 1)',
+    return ['non_duality_glimpsed (0 or 1)', 'self_insight_obtained (0 or 1)',
             'feeling_score_fitbit_am', 'feeling_score_fitbit_pm', 'satisfaction_with_life_as_whole (0-4)',
             'inability_to_cope_with_responsibilities (0-4)', 'sleep_awake_mins']
+
+
+def get_columns_to_drop_with_meditation():
+    """
+    Return columns to drop from the dataset, plus meditation.
+    """
+    columns_to_drop = get_columns_to_drop()
+    columns_to_drop.append('meditation_type (cat)')
+    return columns_to_drop
 
 
 def get_categorical_columns():
