@@ -42,7 +42,7 @@ SLEEP_DATASET_END = '2020-10-27'
 MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
-LATEST_DATA_END = '2023-11-30'
+LATEST_DATA_END = '2023-12-23'
 
 
 def analyze_health_data():
@@ -104,6 +104,7 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     data.split_features_and_target(target)
     coefficients, feature_names = run_model(data.X, data.y)
 
+    feature_names = label_discretized_features(feature_names, feature, bins)
     print_results(coefficients, feature_names)
 
 
@@ -171,6 +172,20 @@ def get_sleep_length_discretized():
     feature = 'sleep_length'
     bins = [5.75, 6, 6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75, 8, 8.25, 8.5, 8.75, 9]
     return feature, bins
+
+
+def label_discretized_features(feature_names, feature, bins):
+    """
+    Updates the discretized feature label with actual bin values
+    """
+    updated_names = []
+    for name in feature_names:
+        if name.startswith(feature):
+            index = int(name.split('_')[-1])
+            bin_value = bins[index]
+            name = name.replace(str(index), str(bin_value))
+        updated_names.append(name)
+    return updated_names
 
 
 def get_meditation_columns(target):
