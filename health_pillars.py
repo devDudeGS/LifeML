@@ -58,7 +58,11 @@ def analyze_health_data():
     print()
     analyze_sleep_length(TARGET_WAKEUP, HEALTH_DATASET_START, LATEST_DATA_END)
 
-    print("--MEDITATION--")
+    print("--SLEEP QUALITY PILLAR--")
+    print()
+    analyze_sleep(TARGET_WAKEUP, HEALTH_DATASET_START, LATEST_DATA_END)
+
+    print("--MEDITATION QUALITY PILLAR--")
     print()
     analyze_meditation(TARGET_NON_DUALITY, TARGET_SELF_INSIGHT, LATEST_DATA_END)
 
@@ -105,6 +109,26 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     coefficients, feature_names = run_model(data.X, data.y)
 
     feature_names = label_discretized_features(feature_names, feature, bins)
+    print_results(coefficients, feature_names)
+
+
+def analyze_sleep(target, date_to_start, date_to_end):
+    data = CsvDataset(HEALTH_CSV)
+
+    # set dates
+    data.drop_index_before_date(date_to_start)
+    data.drop_index_after_date(date_to_end)
+
+    # set columns
+    columns_to_keep = get_all_sleep_columns(target)
+    columns_to_drop = get_excess_cols(data.df, columns_to_keep)
+    data.drop_columns(columns_to_drop)
+    data.encode_categorical_columns(get_past_categorical_columns())
+
+    # run model
+    data.split_features_and_target(target)
+    coefficients, feature_names = run_model(data.X, data.y)
+
     print_results(coefficients, feature_names)
 
 
@@ -157,12 +181,31 @@ def get_categorical_columns():
     return ['caffeine (0 or 1)', 'diet_today (0 or 1 or 2)', 'diet_yesterday (0 or 1 or 2)', 'exercise_type (cat)']
 
 
+def get_past_categorical_columns():
+    """
+    Return categorical columns from the past to encode.
+    """
+    return ['diet_yesterday (0 or 1 or 2)']
+
+
 def get_sleep_length_columns(target):
     """
     Return columns related to sleep length.
     Target could be target_feelings or feeling_score_fitbit_am.
     """
     return ['sleep_length', target]
+
+
+def get_all_sleep_columns(target):
+    """
+    Return columns potentially related to sleep quality.
+    Target is feeling_score_fitbit_am.
+    """
+    return ['diet_yesterday (0 or 1 or 2)', 'diet_prev_week', 'diet_rut', 'meditation_consecutive',
+            'meditation_mins_prev_week', 'meditation_rut', 'exercise_count_prev_week', 'active_zone_mins_yesterday',
+            'active_zone_mins_prev_week', 'exercise_rut', 'sleep_bedtime_diff (21:45-22:20-23:05)',
+            'sleep_bedtime_prev_week', 'sleep_wakeup_diff (5:45-6:15-6:45)', 'sleep_length', 'sleep_score',
+            'sleep_awake_mins', 'sleep_rut', 'steps_yesterday', 'steps_prev_week', target]
 
 
 def get_sleep_length_discretized():
