@@ -57,6 +57,10 @@ def analyze_health_data():
     print()
     analyze_meditation(TARGET_NON_DUALITY, TARGET_SELF_INSIGHT, LATEST_DATA_END)
 
+    print("--FUNK REVERSAL--")
+    print()
+    analyze_feeling_funk(TARGET_FUNK, HEALTH_DATASET_START, LATEST_DATA_END)
+
     print_legend()
 
 
@@ -185,6 +189,38 @@ def analyze_meditation(target_1, target_2, date_to_end):
     coefficients, feature_names = run_model(data.X, data.y)
 
     print_results(coefficients, feature_names)
+
+
+def analyze_feeling_funk(target, date_to_start, date_to_end):
+    """
+    Latest funk analysis:
+    1. exercise_type (cat)_9.0 INVERSE ???
+    2. exercise_type (cat)_10.0 INVERSE ???
+    3. caffeine (0 or 1)_0.0
+
+    Best alpha: 0.01
+    Best RMSE (lower is better): 2.5914335603794987 (oof)
+    R-squared score (higher is better): 0.18088241138619787
+    """
+    data = CsvDataset(HEALTH_CSV)
+
+    # set dates
+    data.drop_index_before_date(date_to_start)
+    data.drop_index_after_date(date_to_end)
+
+    # set columns
+    columns_to_drop = get_columns_to_drop_with_meditation()
+    columns_to_drop.remove(target)
+    columns_to_drop.append(TARGET_MAIN)
+    data.drop_columns(columns_to_drop)
+    data.encode_categorical_columns(get_categorical_columns())
+
+    # run model
+    data.split_features_and_target(target)
+    coefficients, feature_names = run_model(data.X, data.y)
+
+    neg_coefficients = [-x for x in coefficients]
+    print_results(neg_coefficients, feature_names)
 
 
 def get_columns_to_drop():
