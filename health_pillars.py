@@ -19,17 +19,6 @@ RMSE: 0.231
 R-squared score: -0.104
 
 Used GitHub Copilot and Claude 2.0 to help write the initial logic.
-
-Latest important features:
-1. active_zone_mins_prev_week
-2. steps_today
-3. steps_yesterday INVERSE
-
-Latest sleep conclusions:
-1. sleep_length_8   7.75      = BEST
-2. sleep_length_0-3 5.75-6.50 = WORST
-
-Avg sleep awake mins: 55.4
 """
 
 HEALTH_CSV = 'data/health_pillars.csv'
@@ -37,12 +26,14 @@ TARGET_MAIN = 'target_feelings'
 TARGET_WAKEUP = 'feeling_score_fitbit_am'
 TARGET_NON_DUALITY = 'non_duality_glimpsed (0 or 1)'
 TARGET_SELF_INSIGHT = 'self_insight_obtained (0 or 1)'
+TARGET_FUNK = 'feeling_score_funk'
 SLEEP_DATASET_START = '2020-09-08'
 SLEEP_DATASET_END = '2020-10-27'
 MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
-LATEST_DATA_END = '2023-12-23'
+LATEST_DATA_END = '2023-12-31'
+CUSTOM_DAYS_BEFORE = 90  # TODO: implement
 
 
 def analyze_health_data():
@@ -70,6 +61,16 @@ def analyze_health_data():
 
 
 def analyze_all_features(target, date_to_start, date_to_end):
+    """
+    Latest total analysis:
+    1. sleep_wakeup_diff
+    2. sleep_bedtime_diff INVERSE
+    3. sleep_score
+
+    Best alpha: 0.5
+    Best RMSE (lower is better): 0.34262807680830715
+    R-squared score (higher is better): -0.31079255502771974
+    """
     data = CsvDataset(HEALTH_CSV)
 
     # set dates
@@ -88,6 +89,17 @@ def analyze_all_features(target, date_to_start, date_to_end):
 
 
 def analyze_sleep_length(target, date_to_start, date_to_end):
+    """
+    Latest sleep length analysis:
+    1. sleep_length_7.25      = BEST
+    2. sleep_length_5.75-6.50 = WORST
+
+    Best alpha: 0.01
+    Best RMSE (lower is better): 0.5814541666705516
+    R-squared score (higher is better): 0.07092727465969717
+
+    Avg sleep awake mins: 42.5
+    """
     data = CsvDataset(HEALTH_CSV)
 
     # set dates
@@ -113,6 +125,16 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
 
 
 def analyze_sleep(target, date_to_start, date_to_end):
+    """
+    Latest sleep analysis:
+    1. sleep_score
+    2. diet_prev_week INVERSE ???
+    3. exercise_rut ???
+
+    Best alpha: 0.1
+    Best RMSE (lower is better): 0.5466253000647345
+    R-squared score (higher is better): -0.06447544036724828
+    """
     data = CsvDataset(HEALTH_CSV)
 
     # set dates
@@ -133,6 +155,16 @@ def analyze_sleep(target, date_to_start, date_to_end):
 
 
 def analyze_meditation(target_1, target_2, date_to_end):
+    """
+    Latest meditation analysis:
+    1. active_zone_mins_today
+    2. sleep_bedtime_diff INVERSE
+    3. meditation_mins_prev_week INVERSE ???
+
+    Best alpha: 1
+    Best RMSE (lower is better): 0.6135820247822891
+    R-squared score (higher is better): -0.1865736268030005
+    """
     data = CsvDataset(HEALTH_CSV)
 
     # set rows
@@ -160,9 +192,10 @@ def get_columns_to_drop():
     Return columns to drop from the dataset.
     Includes columns used to derive target or other features.
     """
-    return ['non_duality_glimpsed (0 or 1)', 'self_insight_obtained (0 or 1)',
-            'feeling_score_fitbit_am', 'feeling_score_fitbit_pm', 'satisfaction_with_life_as_whole (0-4)',
-            'inability_to_cope_with_responsibilities (0-4)', 'sleep_awake_mins']
+    return ['non_duality_glimpsed (0 or 1)', 'self_insight_obtained (0 or 1)', 'active_zone_mins_weekly_goal',
+            'steps_daily_goal', 'feeling_score_fitbit_am', 'feeling_score_fitbit_pm',
+            'satisfaction_with_life_as_whole (0-4)', 'inability_to_cope_with_responsibilities (0-4)',
+            'sleep_awake_mins', 'feeling_score_funk']
 
 
 def get_columns_to_drop_with_meditation():
