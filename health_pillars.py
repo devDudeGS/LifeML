@@ -32,7 +32,7 @@ SLEEP_DATASET_END = '2020-10-27'
 MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
-LATEST_DATA_END = '2023-12-31'
+LATEST_DATA_END = '2024-02-17'
 CUSTOM_DAYS_BEFORE = 90  # TODO: implement
 
 
@@ -67,13 +67,13 @@ def analyze_health_data():
 def analyze_all_features(target, date_to_start, date_to_end):
     """
     Latest total analysis:
-    1. sleep_wakeup_diff
-    2. sleep_bedtime_diff INVERSE
-    3. sleep_score
+    1. active_zone_mins_prev_week
+    2. meditation_first_time
+    3. steps_today
 
-    Best alpha: 0.5
-    Best RMSE (lower is better): 0.34262807680830715
-    R-squared score (higher is better): -0.31079255502771974
+    Best alpha: 1
+    Best RMSE (lower is better): 0.37354145914658704
+    R-squared score (higher is better): -0.06842680894234254
     """
     data = CsvDataset(HEALTH_CSV)
 
@@ -95,14 +95,14 @@ def analyze_all_features(target, date_to_start, date_to_end):
 def analyze_sleep_length(target, date_to_start, date_to_end):
     """
     Latest sleep length analysis:
-    1. sleep_length_7.25      = BEST
+    1. sleep_length_8         = BEST
     2. sleep_length_5.75-6.50 = WORST
 
     Best alpha: 0.01
-    Best RMSE (lower is better): 0.5814541666705516
-    R-squared score (higher is better): 0.07092727465969717
+    Best RMSE (lower is better): 0.5904647145585616
+    R-squared score (higher is better): 0.1362077235405933
 
-    Avg sleep awake mins: 42.5
+    Avg sleep awake mins: 44.5-48.0
     """
     data = CsvDataset(HEALTH_CSV)
 
@@ -132,12 +132,12 @@ def analyze_sleep(target, date_to_start, date_to_end):
     """
     Latest sleep analysis:
     1. sleep_score
-    2. diet_prev_week INVERSE ???
-    3. exercise_rut ???
+    2. sleep_wakeup_diff
+    3. active_zone_mins_prev_week
 
-    Best alpha: 0.1
-    Best RMSE (lower is better): 0.5466253000647345
-    R-squared score (higher is better): -0.06447544036724828
+    Best alpha: 0.3
+    Best RMSE (lower is better): 0.5371602324440752
+    R-squared score (higher is better): -0.09434472936127092
     """
     data = CsvDataset(HEALTH_CSV)
 
@@ -162,12 +162,12 @@ def analyze_meditation(target_1, target_2, date_to_end):
     """
     Latest meditation analysis:
     1. active_zone_mins_today
-    2. sleep_bedtime_diff INVERSE
-    3. meditation_mins_prev_week INVERSE ???
+    2. sleep_wakeup_diff INVERSE
+    3. active_zone_mins_prev_week
 
     Best alpha: 1
-    Best RMSE (lower is better): 0.6135820247822891
-    R-squared score (higher is better): -0.1865736268030005
+    Best RMSE (lower is better): 0.49294577770545883
+    R-squared score (higher is better): -0.2295682176714493
     """
     data = CsvDataset(HEALTH_CSV)
 
@@ -193,14 +193,7 @@ def analyze_meditation(target_1, target_2, date_to_end):
 
 def analyze_feeling_funk(target, date_to_start, date_to_end):
     """
-    Latest funk analysis:
-    1. exercise_type (cat)_9.0 INVERSE ???
-    2. exercise_type (cat)_10.0 INVERSE ???
-    3. caffeine (0 or 1)_0.0
-
-    Best alpha: 0.01
-    Best RMSE (lower is better): 2.5914335603794987 (oof)
-    R-squared score (higher is better): 0.18088241138619787
+    NEEDS FIXING
     """
     data = CsvDataset(HEALTH_CSV)
 
