@@ -29,7 +29,10 @@ class CsvDataset:
     def drop_index_before_date(self, date):
         """
         Drop rows with index before a given date.
+        If date is a number, treat it as the number of rows to include.
         """
+        if is_number(date):
+            date = self.df.index[-int(date)]
         self.df = self.df[self.df.index >= date]
 
     def drop_index_after_date(self, date):
@@ -181,3 +184,16 @@ def print_legend():
     print("Low negative coefficient = weak negative relationship")
     print("Coefficient near 0 = little linear relationship")
     print()
+
+
+def is_number(n):
+    """
+    Check if variable is a number, not a date.
+    """
+    try:
+        float(n)
+        if '-' in str(n):
+            return False
+    except ValueError:
+        return False
+    return True

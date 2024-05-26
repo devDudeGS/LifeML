@@ -25,7 +25,7 @@ MEDIAN_ERROR_ALL = 0.337845
 MEDIAN_ERROR_SLEEP_LENGTH = 0.569224
 MEDIAN_ERROR_SLEEP_QUALITY = 0.533276
 MEDIAN_ERROR_MEDITATION = 0.543210
-CUSTOM_DAYS_BEFORE = 90  # TODO: implement
+CUSTOM_DAYS_BEFORE = 90
 
 
 def analyze_health_data():
@@ -60,8 +60,8 @@ def analyze_all_features(target, date_to_start, date_to_end):
     data = CsvDataset(HEALTH_CSV)
 
     # set dates
-    data.drop_index_before_date(date_to_start)
     data.drop_index_after_date(date_to_end)
+    data.drop_index_before_date(date_to_start)
 
     # set columns
     data.drop_columns(get_columns_to_drop_with_meditation())
@@ -81,8 +81,8 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     data = CsvDataset(HEALTH_CSV)
 
     # set dates
-    data.drop_index_before_date(date_to_start)
     data.drop_index_after_date(date_to_end)
+    data.drop_index_before_date(date_to_start)
 
     # get avg awake mins
     data.get_avg_in_column('sleep_awake_mins', 30)
@@ -108,8 +108,8 @@ def analyze_sleep(target, date_to_start, date_to_end):
     data = CsvDataset(HEALTH_CSV)
 
     # set dates
-    data.drop_index_before_date(date_to_start)
     data.drop_index_after_date(date_to_end)
+    data.drop_index_before_date(date_to_start)
 
     # set columns
     columns_to_keep = get_all_sleep_columns(target)
