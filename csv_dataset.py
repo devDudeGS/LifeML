@@ -56,7 +56,6 @@ class CsvDataset:
         """
         self.df[feature] = pd.to_numeric(self.df[feature], errors='coerce')
         digitized = np.digitize(self.df[feature], bins=bins)
-        # TODO: replace np array values with actual values from bins rather than indexes
         self.df[feature] = digitized
         self.encode_categorical_columns([feature])
 
@@ -104,17 +103,25 @@ def run_model(X, y):
     """
     model = LassoRegression(alpha=1.0)
     model.split_data(X, y)
-    best_a = model.get_best_alpha(
+    best_a, best_error = model.get_best_alpha(
         model.X_train, model.y_train, model.X_val, model.y_val)
     model.set_alpha(best_a)
     model.fit(model.X_train, model.y_train)
     model.score(model.X_test, model.y_test)
-    return model.get_coefficients_and_features(X)
+    return model, best_error
 
 
-def print_results(coefficients, feature_names):
+def print_failure(best_rmse, rmse_threshold):
     """
-    Print the results of the ML model.
+    Print failure if RMSE doesn't meet threshold.
+    """
+    print(f"RMSE of {best_rmse} was not lower than the threshold of {rmse_threshold}")
+    print()
+
+
+def print_coef(coefficients, feature_names):
+    """
+    Print coefficients with feature names.
     """
     coef_df = pd.DataFrame(
         data=coefficients, index=feature_names, columns=['Coefficient'])
@@ -122,6 +129,45 @@ def print_results(coefficients, feature_names):
     coef_df = coef_df.sort_values(by='Coefficient', ascending=False)
     print(coef_df)
     print()
+
+
+def print_results(model, best_rmse, rmse_threshold, X):
+    """
+    Print the results of the ML model.
+    """
+    if best_rmse < rmse_threshold:
+        coefficients, feature_names = model.get_coefficients_and_features(X)
+
+        print_coef(coefficients, feature_names)
+    else:
+        print_failure(best_rmse, rmse_threshold)
+
+
+def label_discretized_features(feature_names, feature, bins):
+    """
+    Updates the discretized feature label with actual bin values
+    """
+    updated_names = []
+    for name in feature_names:
+        if name.startswith(feature):
+            index = int(name.split('_')[-1])
+            bin_value = bins[index]
+            name = name.replace(str(index), str(bin_value))
+        updated_names.append(name)
+    return updated_names
+
+
+def print_results_discretized(model, best_rmse, rmse_threshold, X, feature, bins):
+    """
+    Print the results of the discretized ML model.
+    """
+    if best_rmse < rmse_threshold:
+        coefficients, feature_names = model.get_coefficients_and_features(X)
+        feature_names = label_discretized_features(feature_names, feature, bins)
+
+        print_coef(coefficients, feature_names)
+    else:
+        print_failure(best_rmse, rmse_threshold)
 
 
 def print_legend():

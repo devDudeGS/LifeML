@@ -36,7 +36,7 @@ class LassoRegression:
 
     def get_best_alpha(self, X_train, y_train, X_val, y_val):
         """
-        Find the best alpha for the Lasso regression model.
+        Find the alpha with the lowest RMSE for the Lasso regression model.
         """
         alphas = [1, 0.8, 0.5, 0.3, 0.1, 0.08, 0.05, 0.03, 0.01]
         best_rmse = float(np.inf)
@@ -53,7 +53,7 @@ class LassoRegression:
 
         print('Best alpha:', best_alpha)
         print('Best RMSE (lower is better):', best_rmse)
-        return best_alpha
+        return best_alpha, best_rmse
 
     def fit(self, X_train, y_train):
         """
