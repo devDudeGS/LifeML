@@ -21,11 +21,11 @@ MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
 LATEST_DATA_END = '2024-04-30'
+CUSTOM_DAYS_BEFORE = 90
 MEDIAN_ERROR_ALL = 0.337845
 MEDIAN_ERROR_SLEEP_LENGTH = 0.569224
 MEDIAN_ERROR_SLEEP_QUALITY = 0.533276
 MEDIAN_ERROR_MEDITATION = 0.543210
-CUSTOM_DAYS_BEFORE = 90
 
 
 def analyze_health_data():
@@ -53,6 +53,14 @@ def analyze_health_data():
     print_legend()
 
 
+def print_date_header(target, data):
+    """
+    Prints the header, containing the target(s) and date range.
+    """
+    print(f"Analyzing the target '{target}' between {data.df.index[0]} and {data.df.index[-1]}.")
+    print()
+
+
 def analyze_all_features(target, date_to_start, date_to_end):
     """
     Analyzes the target using all features.
@@ -62,6 +70,8 @@ def analyze_all_features(target, date_to_start, date_to_end):
     # set dates
     data.drop_index_after_date(date_to_end)
     data.drop_index_before_date(date_to_start)
+
+    print_date_header(target, data)
 
     # set columns
     data.drop_columns(get_columns_to_drop_with_meditation())
@@ -83,6 +93,8 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     # set dates
     data.drop_index_after_date(date_to_end)
     data.drop_index_before_date(date_to_start)
+
+    print_date_header(target, data)
 
     # get avg awake mins
     data.get_avg_in_column('sleep_awake_mins', 30)
@@ -111,6 +123,8 @@ def analyze_sleep(target, date_to_start, date_to_end):
     data.drop_index_after_date(date_to_end)
     data.drop_index_before_date(date_to_start)
 
+    print_date_header(target, data)
+
     # set columns
     columns_to_keep = get_all_sleep_columns(target)
     columns_to_drop = get_excess_cols(data.df, columns_to_keep)
@@ -134,6 +148,8 @@ def analyze_meditation(target_1, target_2, date_to_end):
     data.drop_index_after_date(date_to_end)
     targets = [target_1, target_2]
     data.drop_rows_without_column_values(targets)
+
+    print_date_header(str(f"{target_1} & {target_2}"), data)
 
     # set columns
     target = "target_meditation"
