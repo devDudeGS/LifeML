@@ -73,6 +73,9 @@ def analyze_all_features(target, date_to_start, date_to_end):
 
     print_date_header(target, data)
 
+    # get avg target
+    data.get_avg_in_column(target, 90)
+
     # set columns
     data.drop_columns(get_columns_to_drop_with_meditation())
     data.encode_categorical_columns(get_categorical_columns())
@@ -95,6 +98,9 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     data.drop_index_before_date(date_to_start)
 
     print_date_header(target, data)
+
+    # get avg target
+    data.get_avg_in_column(target, 90)
 
     # get avg awake mins
     data.get_avg_in_column('sleep_awake_mins', 30)
@@ -125,6 +131,9 @@ def analyze_sleep(target, date_to_start, date_to_end):
 
     print_date_header(target, data)
 
+    # get avg target
+    data.get_avg_in_column(target, 90)
+
     # set columns
     columns_to_keep = get_all_sleep_columns(target)
     columns_to_drop = get_excess_cols(data.df, columns_to_keep)
@@ -150,6 +159,10 @@ def analyze_meditation(target_1, target_2, date_to_end):
     data.drop_rows_without_column_values(targets)
 
     print_date_header(str(f"{target_1} & {target_2}"), data)
+
+    # get avg target
+    data.get_avg_in_column(target_1, 90)
+    data.get_avg_in_column(target_2, 90)
 
     # set columns
     target = "target_meditation"
