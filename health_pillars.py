@@ -21,7 +21,8 @@ MEDITATION_DATASET_START = '2021-09-27'
 MEDITATION_DATASET_END = '2021-12-17'
 HEALTH_DATASET_START = '2023-08-01'
 LATEST_DATA_END = '2024-04-30'
-CUSTOM_DAYS_BEFORE = 90
+ELEVEN_MONTHS_BEFORE = 340
+FOUR_MONTHS_BEFORE = 120
 MEDIAN_ERROR_ALL = 0.337845
 MEDIAN_ERROR_SLEEP_LENGTH = 0.569224
 MEDIAN_ERROR_SLEEP_QUALITY = 0.533276
@@ -35,11 +36,11 @@ def analyze_health_data():
 
     print("--ALL FEATURES--")
     print()
-    analyze_all_features(TARGET_MAIN, HEALTH_DATASET_START, LATEST_DATA_END)
+    analyze_all_features(TARGET_MAIN, ELEVEN_MONTHS_BEFORE, LATEST_DATA_END)
 
     print("--SLEEP LENGTH--")
     print()
-    analyze_sleep_length(TARGET_WAKEUP, HEALTH_DATASET_START, LATEST_DATA_END)
+    analyze_sleep_length(TARGET_WAKEUP, FOUR_MONTHS_BEFORE, LATEST_DATA_END)
 
     # TODO: determine how to return useful data
     # print("--SLEEP QUALITY PILLAR--")
@@ -74,7 +75,7 @@ def analyze_all_features(target, date_to_start, date_to_end):
     print_date_header(target, data)
 
     # get avg target
-    data.get_avg_in_column(target, 90)
+    data.get_avg_in_column(target, 30)
 
     # set columns
     data.drop_columns(get_columns_to_drop_with_meditation())
@@ -100,7 +101,7 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     print_date_header(target, data)
 
     # get avg target
-    data.get_avg_in_column(target, 90)
+    data.get_avg_in_column(target, 30)
 
     # get avg awake mins
     data.get_avg_in_column('sleep_awake_mins', 30)
@@ -132,7 +133,7 @@ def analyze_sleep(target, date_to_start, date_to_end):
     print_date_header(target, data)
 
     # get avg target
-    data.get_avg_in_column(target, 90)
+    data.get_avg_in_column(target, 30)
 
     # set columns
     columns_to_keep = get_all_sleep_columns(target)
@@ -161,8 +162,8 @@ def analyze_meditation(target_1, target_2, date_to_end):
     print_date_header(str(f"{target_1} & {target_2}"), data)
 
     # get avg target
-    data.get_avg_in_column(target_1, 90)
-    data.get_avg_in_column(target_2, 90)
+    data.get_avg_in_column(target_1, 30)
+    data.get_avg_in_column(target_2, 30)
 
     # set columns
     target = "target_meditation"
