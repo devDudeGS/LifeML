@@ -1,4 +1,5 @@
 from csv_dataset import CsvDataset, run_model, print_results, print_results_discretized, get_excess_cols, print_legend
+import pandas as pd
 
 """
 Analyzes health data from:
@@ -11,6 +12,7 @@ Used GitHub Copilot and Claude 2.0 to help write the initial logic.
 """
 
 HEALTH_CSV = 'data/health_pillars.csv'
+HISTORY_CSV = 'data/history_all.csv'
 TARGET_MAIN = 'target_feelings'
 TARGET_WAKEUP = 'feeling_score_fitbit_am'
 TARGET_NON_DUALITY = 'non_duality_glimpsed (0 or 1)'
@@ -23,16 +25,20 @@ HEALTH_DATASET_START = '2023-08-01'
 LATEST_DATA_END = '2024-04-30'
 ELEVEN_MONTHS_BEFORE = 340
 FOUR_MONTHS_BEFORE = 120
-MEDIAN_ERROR_ALL = 0.337845
-MEDIAN_ERROR_SLEEP_LENGTH = 0.569224
-MEDIAN_ERROR_SLEEP_QUALITY = 0.533276
-MEDIAN_ERROR_MEDITATION = 0.543210
+ERROR_MAX_ALL = 0.346308
+ERROR_MAX_SLEEP_LENGTH = 0.624999
+ERROR_MAX_SLEEP_QUALITY = 0.641494
+ERROR_MAX_MEDITATION = 0.613582
 
 
 def analyze_health_data():
     print()
     print("Health Pillars Data Analysis")
     print()
+
+    print("--META ANALYSIS--")
+    print()
+    analyze_history_all()
 
     print("--ALL FEATURES--")
     print()
@@ -59,6 +65,7 @@ def print_date_header(target, data):
     Prints the header, containing the target(s) and date range.
     """
     print(f"Analyzing the target '{target}' between {data.df.index[0]} and {data.df.index[-1]}.")
+    print(f"Total entries: {len(data.df)}")
     print()
 
 
@@ -85,7 +92,7 @@ def analyze_all_features(target, date_to_start, date_to_end):
     data.split_features_and_target(target)
     model, best_rmse = run_model(data.X, data.y)
 
-    print_results(model, best_rmse, MEDIAN_ERROR_ALL, data.X)
+    print_results(model, best_rmse, ERROR_MAX_ALL, data.X)
 
 
 def analyze_sleep_length(target, date_to_start, date_to_end):
@@ -117,7 +124,7 @@ def analyze_sleep_length(target, date_to_start, date_to_end):
     data.split_features_and_target(target)
     model, best_rmse = run_model(data.X, data.y)
 
-    print_results_discretized(model, best_rmse, MEDIAN_ERROR_SLEEP_LENGTH, data.X, feature, bins)
+    print_results_discretized(model, best_rmse, ERROR_MAX_SLEEP_LENGTH, data.X, feature, bins)
 
 
 def analyze_sleep(target, date_to_start, date_to_end):
@@ -145,7 +152,7 @@ def analyze_sleep(target, date_to_start, date_to_end):
     data.split_features_and_target(target)
     model, best_rmse = run_model(data.X, data.y)
 
-    print_results(model, best_rmse, MEDIAN_ERROR_SLEEP_QUALITY, data.X)
+    print_results(model, best_rmse, ERROR_MAX_SLEEP_QUALITY, data.X)
 
 
 def analyze_meditation(target_1, target_2, date_to_end):
@@ -177,7 +184,7 @@ def analyze_meditation(target_1, target_2, date_to_end):
     data.split_features_and_target(target)
     model, best_rmse = run_model(data.X, data.y)
 
-    print_results(model, best_rmse, MEDIAN_ERROR_MEDITATION, data.X)
+    print_results(model, best_rmse, ERROR_MAX_MEDITATION, data.X)
 
 
 def get_columns_to_drop():
@@ -258,6 +265,56 @@ def get_meditation_type_feature():
     feature = 'meditation_type (cat)'
     category_prefix = 'meditation_type_'
     return feature, category_prefix
+
+
+def analyze_history_all():
+    """
+    Meta analysis of the results of each month of data.
+    This helps to consolidate results into a single ranked list.
+    TODO: Find a better place for this function.
+    """
+
+    # Read the CSV file
+    data = pd.read_csv(HISTORY_CSV)
+
+    # Initialize dictionaries to store weighted scores and feature counts
+    feature_scores = {}
+    feature_counts = {}
+    normalize_scores = False
+
+    # Weights for the rankings
+    weights = {'1st Important Feature': 3, '2nd Important Feature': 2, '3rd Important Feature': 1}
+
+    # Iterate through the data
+    for index, row in data.iterrows():
+        rmse = row['RMSE (lower = better)']
+        r_squared = row['R-Squared Error (higher = better)']
+        target_median = row['Target Median']
+
+        # Update feature counts and scores
+        for rank, weight in weights.items():
+            feature = row[rank]
+            if feature not in feature_counts:
+                feature_counts[feature] = 0
+                feature_scores[feature] = 0
+            feature_counts[feature] += 1
+
+            # Weight formula: Adjust weight primarily by RMSE, then include R-Squared Error
+            # Adjust total by target median, to weight higher target scores
+            feature_scores[feature] += (weight / rmse + r_squared) * target_median
+
+    # Normalize scores by the total count of each feature to avoid bias from features appearing more frequently
+    if normalize_scores:
+        for feature in feature_scores:
+            feature_scores[feature] /= feature_counts[feature]
+
+    # Convert the scores to a DataFrame for better visualization
+    feature_importance = pd.DataFrame.from_dict(feature_scores, orient='index', columns=['Importance Score'])
+    feature_importance = feature_importance.sort_values(by='Importance Score', ascending=False)
+
+    # Display the ranked features
+    print(feature_importance)
+    print()
 
 
 if __name__ == "__main__":
