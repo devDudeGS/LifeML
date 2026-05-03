@@ -38,6 +38,27 @@ FITBIT_HEADERS = {
 FITBIT_BASE = "https://health.googleapis.com/v4/users/me"
 UTC_OFFSET_HRS = -4
 
+# ── Expected sleep schedule ───────────────────────────────────────────────────
+# Keys are the day-of-week you WAKE UP (0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun)
+EXPECTED_BEDTIME = {
+    0: "21:25",  # wake Mon  → bed Sun night
+    1: "20:55",  # wake Tue  → bed Mon night
+    2: "20:55",  # wake Wed  → bed Tue night
+    3: "20:55",  # wake Thu  → bed Wed night
+    4: "21:25",  # wake Fri  → bed Thu night
+    5: "22:10",  # wake Sat  → bed Fri night
+    6: "22:10",  # wake Sun  → bed Sat night
+}
+EXPECTED_WAKEUP = {
+    0: "05:30",  # Mon
+    1: "05:00",  # Tue
+    2: "05:00",  # Wed
+    3: "05:00",  # Thu
+    4: "05:30",  # Fri
+    5: "06:00",  # Sat
+    6: "06:00",  # Sun
+}
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 def oura_get(endpoint, params):
     r = requests.get(f"{OURA_BASE}/{endpoint}", headers=OURA_HEADERS, params=params)
@@ -66,6 +87,18 @@ def civil_date_tuple(dp):
 
 def is_pixel_watch(dp):
     return dp["dataSource"]["device"].get("displayName") == "Pixel Watch"
+
+def time_diff_minutes(actual_hhmm, expected_hhmm):
+    """Return signed diff in minutes: positive = late, negative = early."""
+    a_h, a_m = map(int, actual_hhmm.split(":"))
+    e_h, e_m = map(int, expected_hhmm.split(":"))
+    diff = (a_h * 60 + a_m) - (e_h * 60 + e_m)
+    # Wrap around midnight for bedtime (e.g. 23:00 vs 01:00)
+    if diff > 12 * 60:
+        diff -= 24 * 60
+    elif diff < -12 * 60:
+        diff += 24 * 60
+    return diff
 
 def utc_to_local(utc_str):
     """Convert a UTC ISO string to local datetime using hardcoded offset."""
@@ -142,13 +175,14 @@ for dp in all_exercise:
 
 # ── Print results ────────────────────────────────────────────────────────────
 cols = (
-    f"{'Date':<12} {'bedtime_start':<16} {'wakeup_end':<12} "
+    f"{'Date':<12} {'bedtime_start':<16} {'expected_bed':<14} {'bed_diff':<10} "
+    f"{'wakeup_end':<12} {'expected_wake':<15} {'wake_diff':<11} "
     f"{'sleep_length':<14} {'awake_mins':<12} {'sleep_score':<13} "
     f"{'readiness':<11} {'nap_length':<12} {'steps':<8} "
     f"{'med_first':<11} {'med_mins':<10} {'exercise_types'}"
 )
 print(cols)
-print("-" * 165)
+print("-" * 200)
 
 for i in range(7, 0, -1):
     day = str(today - timedelta(days=i))
@@ -165,6 +199,14 @@ for i in range(7, 0, -1):
 
     wakeup_dt = datetime.fromisoformat(s["bedtime_end"])
     sleep_wakeup_end = wakeup_dt.strftime("%H:%M")
+
+    wakeup_dow = wakeup_dt.weekday()  # 0=Mon … 6=Sun
+    exp_bed = EXPECTED_BEDTIME[wakeup_dow]
+    exp_wake = EXPECTED_WAKEUP[wakeup_dow]
+    bed_diff_mins = time_diff_minutes(sleep_bedtime_start, exp_bed)
+    wake_diff_mins = time_diff_minutes(sleep_wakeup_end, exp_wake)
+    bed_diff_str = f"{bed_diff_mins:+d}m"
+    wake_diff_str = f"{wake_diff_mins:+d}m"
 
     sleep_length = round(s["total_sleep_duration"] / 3600, 2)
     sleep_awake_mins = math.ceil((s["awake_time"] - s["latency"]) / 60)
@@ -184,7 +226,8 @@ for i in range(7, 0, -1):
     ex_types = ", ".join(sorted(set(exercise_by_day.get(day, [])))) or "—"
 
     print(
-        f"{day:<12} {sleep_bedtime_start:<16} {sleep_wakeup_end:<12} "
+        f"{day:<12} {sleep_bedtime_start:<16} {exp_bed:<14} {bed_diff_str:<10} "
+        f"{sleep_wakeup_end:<12} {exp_wake:<15} {wake_diff_str:<11} "
         f"{sleep_length:<14} {sleep_awake_mins:<12} {sleep_score:<13} "
         f"{readiness:<11} {str(nap_length):<12} {steps:<8} "
         f"{med_first:<11} {med_mins:<10} {ex_types}"
