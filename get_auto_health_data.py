@@ -187,11 +187,11 @@ for dp in all_exercise:
 # ── Write CSV ────────────────────────────────────────────────────────────────
 csv_path = f"health_data_{sys.argv[1]}.csv"
 fieldnames = [
-    "date", "bedtime_start", "expected_bed", "bed_diff",
-    "wakeup_end", "expected_wake", "wake_diff",
-    "sleep_length", "awake_mins", "sleep_score",
-    "readiness", "nap_length", "steps",
-    "med_first", "med_mins", "exercise_types",
+    "date", "meditation_first_time", "meditation_total_mins", "exercise_types",
+    "heart_rate_mins_today", "steps_today", "bedtime_start", "expected_bed",
+    "sleep_bedtime_diff", "wakeup_end", "expected_wake", "sleep_wakeup_diff",
+    "sleep_length", "nap_length", "sleep_score", "sleep_awake_mins",
+    "overnight_readiness_score", "hrv_recovery_score",
 ]
 
 with open(csv_path, "w", newline="") as csvfile:
@@ -241,21 +241,23 @@ with open(csv_path, "w", newline="") as csvfile:
 
         writer.writerow({
             "date": day,
+            "meditation_first_time": med_first,
+            "meditation_total_mins": med_mins,
+            "exercise_types": ex_types,
+            "heart_rate_mins_today": "GET FROM MORPHEUS",
+            "steps_today": steps,
             "bedtime_start": sleep_bedtime_start,
             "expected_bed": exp_bed,
-            "bed_diff": f"{bed_diff_mins:+d}m",
+            "sleep_bedtime_diff": f"{bed_diff_mins:+d}m",
             "wakeup_end": sleep_wakeup_end,
             "expected_wake": exp_wake,
-            "wake_diff": f"{wake_diff_mins:+d}m",
+            "sleep_wakeup_diff": f"{wake_diff_mins:+d}m",
             "sleep_length": sleep_length,
-            "awake_mins": sleep_awake_mins,
-            "sleep_score": sleep_score,
-            "readiness": readiness,
             "nap_length": nap_length,
-            "steps": steps,
-            "med_first": med_first,
-            "med_mins": med_mins,
-            "exercise_types": ex_types,
+            "sleep_score": sleep_score,
+            "sleep_awake_mins": sleep_awake_mins,
+            "overnight_readiness_score": readiness,
+            "hrv_recovery_score": "GET FROM MORPHEUS",
         })
 
 print(f"Wrote {csv_path}")
