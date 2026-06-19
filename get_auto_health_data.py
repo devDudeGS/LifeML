@@ -239,13 +239,14 @@ with open(csv_path, "w", newline="") as csvfile:
         med_mins = round(sum(d for _, d in yoga_sessions)) if yoga_sessions else 0
 
         ex_types = ", ".join(sorted(set(exercise_by_day.get(day, [])))) or ""
+        strength_progression = "# OF EXERCISES HIGHER" if ex_types in ("STRENGTH_TRAINING", "PILATES") else "0"
 
         writer.writerow({
             "date": day,
             "meditation_first_time": med_first,
             "meditation_total_mins": med_mins,
             "exercise_types": ex_types,
-            "strength_progression_exercises": "# OF EXERCISES HIGHER",
+            "strength_progression_exercises": strength_progression,
             "heart_rate_mins_today": "GET FROM MORPHEUS",
             "steps_today": steps,
             "bedtime_start": sleep_bedtime_start,
