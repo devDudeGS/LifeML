@@ -1,5 +1,7 @@
+import csv
 import json
 import math
+import sys
 import requests
 from datetime import datetime, timedelta, date
 from collections import defaultdict
@@ -9,6 +11,16 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
+
+# ── CLI arg ──────────────────────────────────────────────────────────────────
+if len(sys.argv) != 2:
+    print(f"Usage: python {sys.argv[0]} YYYY-MM-DD", file=sys.stderr)
+    sys.exit(1)
+try:
+    start_date = date.fromisoformat(sys.argv[1])
+except ValueError:
+    print(f"Error: date must be in YYYY-MM-DD format, got: {sys.argv[1]}", file=sys.stderr)
+    sys.exit(1)
 
 # ── Oura setup ──────────────────────────────────────────────────────────────
 OURA_TOKEN = os.environ["OURA_PAT"]
@@ -107,9 +119,8 @@ def utc_to_local(utc_str):
 
 # ── Date range ───────────────────────────────────────────────────────────────
 today = date.today()
-start = today - timedelta(days=8)  # buffer for Oura session alignment
-end = today
-params_range = {"start_date": str(start), "end_date": str(end)}
+oura_fetch_start = start_date - timedelta(days=1)  # buffer for Oura session alignment
+params_range = {"start_date": str(oura_fetch_start), "end_date": str(today)}
 
 # ── Fetch Oura data ──────────────────────────────────────────────────────────
 sleep_raw     = oura_get("sleep", params_range)
@@ -127,7 +138,7 @@ for s in sleep_raw["data"]:
         naps_by_day[s["day"]] += s["total_sleep_duration"]
 
 # ── Fetch Fitbit data ────────────────────────────────────────────────────────
-fitbit_start = str(today - timedelta(days=7))
+fitbit_start = str(start_date)
 
 # Steps — Pixel Watch only, all pages, filter client-side by date
 all_steps = fitbit_get_all_pages(
@@ -173,62 +184,78 @@ for dp in all_exercise:
     else:
         exercise_by_day[day_str].append(ex_type)
 
-# ── Print results ────────────────────────────────────────────────────────────
-cols = (
-    f"{'Date':<12} {'bedtime_start':<16} {'expected_bed':<14} {'bed_diff':<10} "
-    f"{'wakeup_end':<12} {'expected_wake':<15} {'wake_diff':<11} "
-    f"{'sleep_length':<14} {'awake_mins':<12} {'sleep_score':<13} "
-    f"{'readiness':<11} {'nap_length':<12} {'steps':<8} "
-    f"{'med_first':<11} {'med_mins':<10} {'exercise_types'}"
-)
-print(cols)
-print("-" * 200)
+# ── Write CSV ────────────────────────────────────────────────────────────────
+csv_path = f"health_data_{sys.argv[1]}.csv"
+fieldnames = [
+    "date", "bedtime_start", "expected_bed", "bed_diff",
+    "wakeup_end", "expected_wake", "wake_diff",
+    "sleep_length", "awake_mins", "sleep_score",
+    "readiness", "nap_length", "steps",
+    "med_first", "med_mins", "exercise_types",
+]
 
-for i in range(7, 0, -1):
-    day = str(today - timedelta(days=i))
-    s = long_sleeps.get(day)
+with open(csv_path, "w", newline="") as csvfile:
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
 
-    if not s:
-        print(f"{day:<12} {'No sleep data'}")
-        continue
+    current = start_date
+    while current < today:
+        day = str(current)
+        current += timedelta(days=1)
 
-    # Oura fields
-    bedtime_start_dt = datetime.fromisoformat(s["bedtime_start"])
-    sleep_onset = bedtime_start_dt + timedelta(seconds=s["latency"])
-    sleep_bedtime_start = sleep_onset.strftime("%H:%M")
+        s = long_sleeps.get(day)
+        if not s:
+            writer.writerow({"date": day, "bedtime_start": "No sleep data"})
+            continue
 
-    wakeup_dt = datetime.fromisoformat(s["bedtime_end"])
-    sleep_wakeup_end = wakeup_dt.strftime("%H:%M")
+        # Oura fields
+        bedtime_start_dt = datetime.fromisoformat(s["bedtime_start"])
+        sleep_onset = bedtime_start_dt + timedelta(seconds=s["latency"])
+        sleep_bedtime_start = sleep_onset.strftime("%H:%M")
 
-    wakeup_dow = wakeup_dt.weekday()  # 0=Mon … 6=Sun
-    exp_bed = EXPECTED_BEDTIME[wakeup_dow]
-    exp_wake = EXPECTED_WAKEUP[wakeup_dow]
-    bed_diff_mins = time_diff_minutes(sleep_bedtime_start, exp_bed)
-    wake_diff_mins = time_diff_minutes(sleep_wakeup_end, exp_wake)
-    bed_diff_str = f"{bed_diff_mins:+d}m"
-    wake_diff_str = f"{wake_diff_mins:+d}m"
+        wakeup_dt = datetime.fromisoformat(s["bedtime_end"])
+        sleep_wakeup_end = wakeup_dt.strftime("%H:%M")
 
-    sleep_length = round(s["total_sleep_duration"] / 3600, 2)
-    sleep_awake_mins = math.ceil((s["awake_time"] - s["latency"]) / 60)
-    sleep_score = sleep_score_by_day.get(day, "N/A")
-    readiness = readiness_by_day.get(day, "N/A")
+        wakeup_dow = wakeup_dt.weekday()  # 0=Mon … 6=Sun
+        exp_bed = EXPECTED_BEDTIME[wakeup_dow]
+        exp_wake = EXPECTED_WAKEUP[wakeup_dow]
+        bed_diff_mins = time_diff_minutes(sleep_bedtime_start, exp_bed)
+        wake_diff_mins = time_diff_minutes(sleep_wakeup_end, exp_wake)
 
-    nap_secs = naps_by_day.get(day, 0)
-    nap_length = round(nap_secs / 3600, 2) if nap_secs else "—"
+        sleep_length = round(s["total_sleep_duration"] / 3600, 2)
+        sleep_awake_mins = math.ceil((s["awake_time"] - s["latency"]) / 60)
+        sleep_score = sleep_score_by_day.get(day, "")
+        readiness = readiness_by_day.get(day, "")
 
-    # Fitbit fields
-    steps = steps_by_day.get(day, 0)
+        nap_secs = naps_by_day.get(day, 0)
+        nap_length = round(nap_secs / 3600, 2) if nap_secs else ""
 
-    yoga_sessions = sorted(yoga_by_day.get(day, []))  # sorted by start time
-    med_first = yoga_sessions[0][0] if yoga_sessions else "—"
-    med_mins = round(sum(d for _, d in yoga_sessions), 1) if yoga_sessions else 0
+        # Fitbit fields
+        steps = steps_by_day.get(day, 0)
 
-    ex_types = ", ".join(sorted(set(exercise_by_day.get(day, [])))) or "—"
+        yoga_sessions = sorted(yoga_by_day.get(day, []))
+        med_first = yoga_sessions[0][0] if yoga_sessions else ""
+        med_mins = round(sum(d for _, d in yoga_sessions), 1) if yoga_sessions else 0
 
-    print(
-        f"{day:<12} {sleep_bedtime_start:<16} {exp_bed:<14} {bed_diff_str:<10} "
-        f"{sleep_wakeup_end:<12} {exp_wake:<15} {wake_diff_str:<11} "
-        f"{sleep_length:<14} {sleep_awake_mins:<12} {sleep_score:<13} "
-        f"{readiness:<11} {str(nap_length):<12} {steps:<8} "
-        f"{med_first:<11} {med_mins:<10} {ex_types}"
-    )
+        ex_types = ", ".join(sorted(set(exercise_by_day.get(day, [])))) or ""
+
+        writer.writerow({
+            "date": day,
+            "bedtime_start": sleep_bedtime_start,
+            "expected_bed": exp_bed,
+            "bed_diff": f"{bed_diff_mins:+d}m",
+            "wakeup_end": sleep_wakeup_end,
+            "expected_wake": exp_wake,
+            "wake_diff": f"{wake_diff_mins:+d}m",
+            "sleep_length": sleep_length,
+            "awake_mins": sleep_awake_mins,
+            "sleep_score": sleep_score,
+            "readiness": readiness,
+            "nap_length": nap_length,
+            "steps": steps,
+            "med_first": med_first,
+            "med_mins": med_mins,
+            "exercise_types": ex_types,
+        })
+
+print(f"Wrote {csv_path}")
