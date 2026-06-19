@@ -53,20 +53,20 @@ UTC_OFFSET_HRS = -4
 # ── Expected sleep schedule ───────────────────────────────────────────────────
 # Keys are the day-of-week you WAKE UP (0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun)
 EXPECTED_BEDTIME = {
-    0: "21:25",  # wake Mon  → bed Sun night
-    1: "20:55",  # wake Tue  → bed Mon night
-    2: "20:55",  # wake Wed  → bed Tue night
-    3: "20:55",  # wake Thu  → bed Wed night
-    4: "21:25",  # wake Fri  → bed Thu night
+    0: "21:55",  # wake Mon  → bed Sun night
+    1: "21:10",  # wake Tue  → bed Mon night
+    2: "21:10",  # wake Wed  → bed Tue night
+    3: "21:10",  # wake Thu  → bed Wed night
+    4: "21:55",  # wake Fri  → bed Thu night
     5: "22:10",  # wake Sat  → bed Fri night
     6: "22:10",  # wake Sun  → bed Sat night
 }
 EXPECTED_WAKEUP = {
-    0: "05:30",  # Mon
-    1: "05:00",  # Tue
-    2: "05:00",  # Wed
-    3: "05:00",  # Thu
-    4: "05:30",  # Fri
+    0: "06:00",  # Mon
+    1: "05:15",  # Tue
+    2: "05:15",  # Wed
+    3: "05:15",  # Thu
+    4: "06:00",  # Fri
     5: "06:00",  # Sat
     6: "06:00",  # Sun
 }
@@ -185,13 +185,14 @@ for dp in all_exercise:
         exercise_by_day[day_str].append(ex_type)
 
 # ── Write CSV ────────────────────────────────────────────────────────────────
-csv_path = f"health_data_{sys.argv[1]}.csv"
+csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", f"health_data_{sys.argv[1]}.csv")
 fieldnames = [
     "date", "meditation_first_time", "meditation_total_mins", "exercise_types",
-    "heart_rate_mins_today", "steps_today", "bedtime_start", "expected_bed",
-    "sleep_bedtime_diff", "wakeup_end", "expected_wake", "sleep_wakeup_diff",
-    "sleep_length", "nap_length", "sleep_score", "sleep_awake_mins",
-    "overnight_readiness_score", "hrv_recovery_score",
+    "strength_progression_exercises", "heart_rate_mins_today", "steps_today",
+    "bedtime_start", "expected_bed", "sleep_bedtime_diff", "wakeup_end",
+    "expected_wake", "sleep_wakeup_diff", "sleep_length", "nap_length",
+    "sleep_score", "sleep_awake_mins", "overnight_readiness_score",
+    "hrv_recovery_score",
 ]
 
 with open(csv_path, "w", newline="") as csvfile:
@@ -222,20 +223,20 @@ with open(csv_path, "w", newline="") as csvfile:
         bed_diff_mins = time_diff_minutes(sleep_bedtime_start, exp_bed)
         wake_diff_mins = time_diff_minutes(sleep_wakeup_end, exp_wake)
 
-        sleep_length = round(s["total_sleep_duration"] / 3600, 2)
+        sleep_length = f"{s['total_sleep_duration'] / 3600:.2f}"
         sleep_awake_mins = math.ceil((s["awake_time"] - s["latency"]) / 60)
         sleep_score = sleep_score_by_day.get(day, "")
         readiness = readiness_by_day.get(day, "")
 
         nap_secs = naps_by_day.get(day, 0)
-        nap_length = round(nap_secs / 3600, 2) if nap_secs else ""
+        nap_length = f"{nap_secs / 3600:.2f}"
 
         # Fitbit fields
         steps = steps_by_day.get(day, 0)
 
         yoga_sessions = sorted(yoga_by_day.get(day, []))
-        med_first = yoga_sessions[0][0] if yoga_sessions else ""
-        med_mins = round(sum(d for _, d in yoga_sessions), 1) if yoga_sessions else 0
+        med_first = str(int(yoga_sessions[0][0].replace(":", ""))) if yoga_sessions else "0"
+        med_mins = round(sum(d for _, d in yoga_sessions)) if yoga_sessions else 0
 
         ex_types = ", ".join(sorted(set(exercise_by_day.get(day, [])))) or ""
 
@@ -244,14 +245,15 @@ with open(csv_path, "w", newline="") as csvfile:
             "meditation_first_time": med_first,
             "meditation_total_mins": med_mins,
             "exercise_types": ex_types,
+            "strength_progression_exercises": "# OF EXERCISES HIGHER",
             "heart_rate_mins_today": "GET FROM MORPHEUS",
             "steps_today": steps,
             "bedtime_start": sleep_bedtime_start,
             "expected_bed": exp_bed,
-            "sleep_bedtime_diff": f"{bed_diff_mins:+d}m",
+            "sleep_bedtime_diff": bed_diff_mins,
             "wakeup_end": sleep_wakeup_end,
             "expected_wake": exp_wake,
-            "sleep_wakeup_diff": f"{wake_diff_mins:+d}m",
+            "sleep_wakeup_diff": wake_diff_mins,
             "sleep_length": sleep_length,
             "nap_length": nap_length,
             "sleep_score": sleep_score,
